@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PAGASA Translate</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Site Header -->
+  <header class="site-header">
+    <span class="badge">
+      <span class="dot"></span>
+      PAGASA Live
+    </span>
+    <span class="tagline">Weather Alert Translator</span>
+  </header>
+
+  <!-- Main Card -->
+  <div class="card">
+    <div class="card-header">
+      <h2>PAGASA Translate</h2>
+      <p>Real-time bulletin localization</p>
+    </div>
+
+    <div class="card-body">
+      <label class="field-label" for="lang">Select Language</label>
+      <select id="lang">
+        <option value="Tagalog">Tagalog</option>
+        <option value="Ilokano">Ilokano</option>
+        <option value="Cebuano">Cebuano</option>
+        <option value="Bikolano">Bikolano</option>
+      </select>
+
+      <button onclick="getData()">
+        <span class="icon">⬇</span>
+        Get Latest Alert
+      </button>
+
+      <div id="output" class="result">
+        <div class="result-header">Translation Output</div>
+        <div class="result-body">
+          <p id="resText"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Demo Note -->
+  <p class="demo-note">PR1 Demo · Proof of concept · Not for public use</p>
+
+  <script>
+    async function getData() {
+      const lang = document.getElementById('lang').value;
+      const output = document.getElementById('output');
+      const resText = document.getElementById('resText');
+
+      output.style.display = "block";
+      resText.innerText = "Loading…";
+
+      try {
+        const res = await fetch(`/api/bulletin?lang=${lang}`);
+        const data = await res.json();
+        resText.innerText = data.translated;
+      } catch (err) {
+        resText.innerText = "Error connecting to server.";
+      }
+    }
+  </script>
+
+</body>
+</html>
