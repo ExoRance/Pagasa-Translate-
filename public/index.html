@@ -1,73 +1,619 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fil">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PAGASA Translate</title>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Disaster Translate</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        :root {
+            --bg: #ffffff;
+            --card: #f6f8ff;
+            --border: #e4e7ec;
+            --text-primary: #101828;
+            --text-secondary: #667085;
+            --text-muted: #98a2b3;
+            --blue: #638cc5;
+            --blue-light: #eff4ff;
+            --blue-border: #b2ccff;
+            --red: #d92d20;
+            --red-light: #fff1f0;
+            --red-border: #fca5a1;
+            --orange-light: #fff4ed;
+            --orange-border: #f9c784;
+            --yellow-light: #fffaeb;
+            --yellow-border: #fec84b;
+            --green-light: #ecfdf3;
+            --green-border: #6ce9a6;
+            --radius: 12px;
+            --shadow: 0 1px 3px rgba(16,24,40,0.1), 0 1px 2px rgba(16,24,40,0.06);
+            --shadow-md: 0 4px 8px rgba(16,24,40,0.08), 0 2px 4px rgba(16,24,40,0.04);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        /* ── Top Bar ── */
+        .topbar {
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .topbar-title { font-size: 1.05rem; font-weight: 700; }
+        .topbar-sub { font-size: 0.72rem; color: var(--text-secondary); }
+
+        .bell-btn {
+            width: 36px; height: 36px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--card);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem;
+        }
+
+        /* ── Content ── */
+        .content { padding: 16px 16px 100px; }
+
+        /* ── Language selector ── */
+        .lang-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .lang-label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .select-wrap { position: relative; flex: 1; }
+
+        .select-wrap::after {
+            content: '▾';
+            position: absolute;
+            right: 12px; top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+            font-size: 0.8rem;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px 32px 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--card);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.88rem;
+            font-weight: 500;
+            appearance: none;
+            cursor: pointer;
+        }
+
+        select:focus { outline: 2px solid var(--blue); outline-offset: -2px; }
+
+        .refresh-btn {
+            width: 38px; height: 38px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--card);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: background 0.15s;
+        }
+
+        .refresh-btn:hover { background: var(--bg); }
+        .refresh-btn.spinning { animation: spin 0.7s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Loading ── */
+        .loading-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 50px 20px;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+
+        .spinner {
+            width: 32px; height: 32px;
+            border: 3px solid var(--border);
+            border-top-color: var(--blue);
+            border-radius: 50%;
+            animation: spin 0.75s linear infinite;
+            margin: 0 auto 12px;
+        }
+
+        .loading-card p { font-size: 0.85rem; color: var(--text-secondary); }
+
+        /* ── No active state ── */
+        .clear-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 48px 24px;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+
+        .clear-icon { font-size: 3rem; margin-bottom: 14px; }
+
+        .clear-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .clear-sub {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .clear-time {
+            margin-top: 16px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* ── Cyclone header card ── */
+        .cyclone-card {
+            border-radius: var(--radius);
+            padding: 18px;
+            margin-bottom: 12px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .cyclone-card.sig-4 { background: var(--red-light); border: 1px solid var(--red-border); }
+        .cyclone-card.sig-3 { background: var(--orange-light); border: 1px solid var(--orange-border); }
+        .cyclone-card.sig-2 { background: var(--yellow-light); border: 1px solid var(--yellow-border); }
+        .cyclone-card.sig-1 { background: var(--blue-light); border: 1px solid var(--blue-border); }
+        .cyclone-card.sig-final { background: var(--green-light); border: 1px solid var(--green-border); }
+
+        .cyclone-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 10px;
+            border-radius: 100px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            color: white;
+        }
+
+        .tag-red    { background: #d92d20; }
+        .tag-orange { background: #c4320a; }
+        .tag-yellow { background: #dc6803; }
+        .tag-blue   { background: var(--blue); }
+        .tag-green  { background: #059669; }
+
+        .tag-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.85);
+            animation: blink 1.4s ease-in-out infinite;
+        }
+
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+        .cyclone-name {
+            font-size: 1.9rem;
+            font-weight: 700;
+            line-height: 1.1;
+        }
+
+        .cyclone-intro {
+            margin-top: 6px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .meta-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+
+        .meta-pill {
+            padding: 4px 10px;
+            background: rgba(255,255,255,0.7);
+            border: 1px solid rgba(0,0,0,0.07);
+            border-radius: 100px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .meta-pill strong { color: var(--text-primary); }
+
+        /* ── Summary ── */
+        .summary-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            box-shadow: var(--shadow);
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* ── Details grid ── */
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .detail-tile {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 12px 14px;
+            box-shadow: var(--shadow);
+        }
+
+        .detail-tile.full { grid-column: span 2; }
+        .detail-icon { font-size: 1.1rem; margin-bottom: 5px; }
+        .detail-label { font-size: 0.68rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px; }
+        .detail-value { font-size: 0.9rem; font-weight: 600; color: var(--text-primary); }
+        .detail-value.sm { font-size: 0.82rem; font-weight: 500; }
+
+        /* ── Section label ── */
+        .section-head {
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        /* ── Signal cards ── */
+        .signal-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            box-shadow: var(--shadow);
+        }
+
+        .signal-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+
+        .signal-badge {
+            width: 42px; height: 42px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 1.1rem;
+            flex-shrink: 0; color: white;
+        }
+        .b-5 { background: #ff3cef; }
+        .b-4 { background: #d92d20; }
+        .b-3 { background: #c4920a; }
+        .b-2 { background: #efff5b; }
+        .b-1 { background: #1570ef; }
+
+        .signal-plain {
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .c-4 { color: #d92d20; }
+        .c-3 { color: #c4320a; }
+        .c-2 { color: #dc6803; }
+        .c-1 { color: #1570ef; }
+
+        .signal-detail-text {
+            margin-top: 3px;
+            font-size: 0.81rem;
+            color: var(--text-secondary);
+            line-height: 1.45;
+        }
+
+        .signal-divider { height: 1px; background: var(--border); margin: 10px 0; }
+
+        .areas-label {
+            font-size: 0.68rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 8px;
+        }
+
+        .area-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+        .area-chip {
+            padding: 4px 10px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            font-size: 0.78rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        /* ── Action items ── */
+        .action-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 12px 16px;
+            box-shadow: var(--shadow);
+            font-size: 0.87rem;
+            color: var(--text-primary);
+            line-height: 1.5;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .action-emoji { font-size: 1.2em; flex-shrink: 0; }
+
+        /* ── Bottom Nav ── */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 100%; max-width: 480px;
+            background: var(--card);
+            border-top: 1px solid var(--border);
+            display: flex;
+            z-index: 100;
+        }
+
+        .nav-item {
+            flex: 1; padding: 10px 4px 12px;
+            text-align: center; cursor: pointer;
+            border: none; background: transparent;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .nav-icon { font-size: 1.25rem; display: block; margin-bottom: 2px; }
+        .nav-label { font-size: 0.67rem; font-weight: 600; color: var(--text-muted); display: block; }
+        .nav-item.active .nav-label { color: var(--blue); }
+
+        .fade-in { animation: fadeIn 0.2s ease; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+    </style>
 </head>
 <body>
 
-  <!-- Site Header -->
-  <header class="site-header">
-    <span class="badge">
-      <span class="dot"></span>
-      PAGASA Live
-    </span>
-    <span class="tagline">Weather Alert Translator</span>
-  </header>
-
-  <!-- Main Card -->
-  <div class="card">
-    <div class="card-header">
-      <h2>PAGASA Translate</h2>
-      <p>Real-time bulletin localization</p>
+<div class="topbar">
+    <div>
+        <div class="topbar-title">Disaster Translate</div>
+        <div class="topbar-sub">PAGASA Tropical Cyclone Bulletins</div>
     </div>
+    <div class="bell-btn">🔔</div>
+</div>
 
-    <div class="card-body">
-      <label class="field-label" for="lang">Select Language</label>
-      <select id="lang">
-        <option value="Tagalog">Tagalog</option>
-        <option value="Ilokano">Ilokano</option>
-        <option value="Cebuano">Cebuano</option>
-        <option value="Bikolano">Bikolano</option>
-      </select>
+<div class="content">
 
-      <button onclick="getData()">
-        <span class="icon">⬇</span>
-        Get Latest Alert
-      </button>
-
-      <div id="output" class="result">
-        <div class="result-header">Translation Output</div>
-        <div class="result-body">
-          <p id="resText"></p>
+    <!-- Language picker + refresh -->
+    <div class="lang-row">
+        <span class="lang-label">Wika:</span>
+        <div class="select-wrap">
+            <select id="lang" onchange="fetchLatest()">
+                <option value="Tagalog">Tagalog</option>
+                <option value="Cebuano">Cebuano</option>
+                <option value="Ilokano">Ilokano</option>
+                <option value="Waray">Waray</option>
+            </select>
         </div>
-      </div>
+        <div class="refresh-btn" id="refreshBtn" onclick="fetchLatest()" title="I-refresh">🔄</div>
     </div>
-  </div>
 
-  <!-- Demo Note -->
-  <p class="demo-note">PR1 Demo · Proof of concept · Not for public use</p>
+    <!-- Result area -->
+    <div id="result"></div>
 
-  <script>
-    async function getData() {
-      const lang = document.getElementById('lang').value;
-      const output = document.getElementById('output');
-      const resText = document.getElementById('resText');
+</div>
 
-      output.style.display = "block";
-      resText.innerText = "Loading…";
+<nav class="bottom-nav">
+    <button class="nav-item active"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></button>
+    <button class="nav-item"><span class="nav-icon">🎒</span><span class="nav-label">Prepare</span></button>
+    <button class="nav-item"><span class="nav-icon">⚠️</span><span class="nav-label">Alerts</span></button>
+    <button class="nav-item"><span class="nav-icon">ℹ️</span><span class="nav-label">Info</span></button>
+</nav>
 
-      try {
-        const res = await fetch(`/api/bulletin?lang=${lang}`);
-        const data = await res.json();
-        resText.innerText = data.translated;
-      } catch (err) {
-        resText.innerText = "Error connecting to server.";
-      }
+<script>
+    const resultEl = document.getElementById('result');
+
+    function showLoading() {
+        document.getElementById('refreshBtn').classList.add('spinning');
+        resultEl.innerHTML = `
+            <div class="loading-card">
+                <div class="spinner"></div>
+                <p>Kinukuha ang pinakabagong bulletin…</p>
+            </div>`;
     }
-  </script>
 
+    function stopLoading() {
+        document.getElementById('refreshBtn').classList.remove('spinning');
+    }
+
+    function getTopSignal(signals) {
+        if (!signals || signals.length === 0) return 0;
+        return Math.max(...signals.map(s => parseInt(s.number)));
+    }
+
+    function getCardClass(data) {
+        if (data.is_final) return 'sig-final';
+        const top = getTopSignal(data.signals);
+        return top > 0 ? `sig-${top}` : 'sig-1';
+    }
+
+    function getTag(data) {
+        if (data.is_final) return { cls: 'tag-green', label: data.strings.final_tag, dot: false };
+        const top = getTopSignal(data.signals);
+        const label = top > 0 ? `Signal No. ${top} · ${data.strings.active_tag}` : data.strings.active_tag;
+        const clsMap = { 4: 'tag-red', 3: 'tag-orange', 2: 'tag-yellow', 1: 'tag-blue' };
+        return { cls: clsMap[top] || 'tag-blue', label, dot: true };
+    }
+
+    function renderBulletin(data) {
+        stopLoading();
+
+        if (data.status === 'no_active') {
+            const now = new Date().toLocaleString('fil-PH', { dateStyle: 'long', timeStyle: 'short' });
+            resultEl.innerHTML = `
+                <div class="clear-card fade-in">
+                    <div class="clear-icon">🌤️</div>
+                    <div class="clear-title">${data.message}</div>
+                    <div class="clear-sub">Walang tropical cyclone na pumapasok sa Philippine Area of Responsibility ngayon.</div>
+                    <div class="clear-time">Na-check: ${now}</div>
+                </div>`;
+            return;
+        }
+
+        if (data.error || data.status === 'error') {
+            resultEl.innerHTML = `
+                <div class="clear-card fade-in">
+                    <div class="clear-icon">⚠️</div>
+                    <div class="clear-title">Hindi ma-load ang bulletin</div>
+                    <div class="clear-sub">${data.message || data.error}</div>
+                </div>`;
+            return;
+        }
+
+        const tag = getTag(data);
+        const s = data.strings;
+        const d = data.details;
+
+        // Aggregate affected areas from parsed signals
+        const allAreas = Array.from(new Set((data.signals || []).flatMap(sig => sig.areas || []))).filter(Boolean);
+        const affectedSummary = allAreas.length ? allAreas.slice(0, 8).join(', ') + (allAreas.length > 8 ? '...' : '') : '';
+
+        // Hide raw position text if it contains coordinates or center-of-eye phrasing
+        const positionValue = d.position && d.position.value ? d.position.value : '';
+        const hidePosition = /center of the eye|\d+\s*km|°|\d+\.\d+\s*°|\(|\)|\b\d{1,3}°/i.test(positionValue);
+
+        const signalsHTML = data.signals && data.signals.length > 0
+            ? data.signals.map(sig => `
+                <div class="signal-card">
+                    <div class="signal-header">
+                        <div class="signal-badge b-${sig.number}">${sig.number}</div>
+                        <div>
+                            <div class="signal-plain c-${sig.number}">${sig.plain_label}</div>
+                            <div class="signal-detail-text">${sig.detail}</div>
+                        </div>
+                    </div>
+                    <div class="signal-divider"></div>
+                    <div class="areas-label">${s.affected_label}</div>
+                    <div class="area-chips">
+                        ${(sig.areas || []).map(a => `<span class="area-chip">${a}</span>`).join('')}
+                    </div>
+                </div>`).join('')
+            : '';
+
+        const actionsHTML = data.actions && data.actions.length > 0
+            ? data.actions.map(a => {
+                const emoji = a.split(' ')[0];
+                const text = a.split(' ').slice(1).join(' ');
+                return `<div class="action-card"><span class="action-emoji">${emoji}</span><span>${text}</span></div>`;
+            }).join('')
+            : '';
+
+        resultEl.innerHTML = `
+            <div class="fade-in">
+                <div class="cyclone-card ${getCardClass(data)}">
+                    <div class="cyclone-tag ${tag.cls}">
+                        ${tag.dot ? '<div class="tag-dot"></div>' : ''}
+                        ${tag.label}
+                    </div>
+                    <div class="cyclone-name">${data.cyclone_name}</div>
+                    <div class="cyclone-intro">${data.intro}</div>
+                    <div class="meta-pills">
+                        <div class="meta-pill">${s.bulletin_no} <strong>${data.bulletin_number}</strong></div>
+                        ${data.is_final ? `<div class="meta-pill"><strong>${s.final_tag}</strong></div>` : ''}
+                    </div>
+                </div>
+
+                <div class="summary-card">
+                    ${affectedSummary ? `<div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:6px;">${s.affected_label}</div><div style="font-weight:600">${affectedSummary}</div>` : '<div style="font-size:0.85rem;color:var(--text-muted)">—</div>'}
+                </div>
+
+                <div class="details-grid">
+                    ${!hidePosition && positionValue ? `<div class="detail-tile full">
+                        <div class="detail-icon">📍</div>
+                        <div class="detail-label">${d.position.label}</div>
+                        <div class="detail-value sm">${positionValue}</div>
+                    </div>` : ''}
+                    <div class="detail-tile">
+                        <div class="detail-icon">💨</div>
+                        <div class="detail-label">${d.wind.label}</div>
+                        <div class="detail-value">${d.wind.value}</div>
+                    </div>
+                    <div class="detail-tile">
+                        <div class="detail-icon">🌬️</div>
+                        <div class="detail-label">${d.gust.label}</div>
+                        <div class="detail-value">${d.gust.value}</div>
+                    </div>
+                    <div class="detail-tile">
+                        <div class="detail-icon">🌧️</div>
+                        <div class="detail-label">${d.rainfall.label}</div>
+                        <div class="detail-value sm">${d.rainfall.value}</div>
+                    </div>
+                    <div class="detail-tile">
+                        <div class="detail-icon">🧭</div>
+                        <div class="detail-label">${d.movement.label}</div>
+                        <div class="detail-value sm">${d.movement.value}</div>
+                    </div>
+                </div>
+
+                ${signalsHTML ? `<div class="section-head">${s.affected_label}</div>${signalsHTML}` : ''}
+                ${actionsHTML ? `<div class="section-head" style="margin-top:4px;">${s.what_to_do}</div>${actionsHTML}` : ''}
+            </div>`;
+    }
+
+    async function fetchLatest() {
+        showLoading();
+        const lang = document.getElementById('lang').value;
+        try {
+            const res = await fetch(`/api/bulletin/latest?lang=${lang}`);
+            const data = await res.json();
+            renderBulletin(data);
+        } catch (e) {
+            stopLoading();
+            resultEl.innerHTML = `
+                <div class="clear-card fade-in">
+                    <div class="clear-icon">⚠️</div>
+                    <div class="clear-title">Hindi ma-abot ang server</div>
+                    <div class="clear-sub">Tiyaking tumatakbo ang Node server sa port 3000.</div>
+                </div>`;
+        }
+    }
+
+    window.addEventListener('load', fetchLatest);
+</script>
 </body>
 </html>
